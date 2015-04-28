@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include "gstlatency.h"
+#include "kmslatency.h"
 #include "gstlog.h"
 #include "gstrusage.h"
 #include "gststats.h"
@@ -33,6 +34,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_tracer_register (plugin, "latency", gst_latency_tracer_get_type ()))
+    return FALSE;
+  if (!gst_tracer_register (plugin, "kmslatency",
+          kms_latency_tracer_get_type ()))
     return FALSE;
   if (!gst_tracer_register (plugin, "log", gst_log_tracer_get_type ()))
     return FALSE;
