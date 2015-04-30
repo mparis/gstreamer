@@ -18,6 +18,7 @@
 #endif
 
 #include "kmslatency.h"
+#include <glib/gprintf.h>
 
 GST_DEBUG_CATEGORY_STATIC (kms_latency_debug);
 #define GST_CAT_DEFAULT kms_latency_debug
@@ -176,10 +177,9 @@ kms_latency_tracer_log_entry (KmsLatencyTracer * self, KmsLatencyEntry * entry)
   const gchar *element_name =
       (entry->element != NULL) ? GST_ELEMENT_NAME (entry->element) : "";
 
-  GST_TRACE_OBJECT (self,
-      "%p,%s,%s:%s,%" G_GUINT64_FORMAT ",%" G_GUINT32_FORMAT, entry->thread_ptr,
-      entry_type_str[entry->type].str, element_name, GST_PAD_NAME (entry->pad),
-      entry->ts, entry->num_buffers);
+  g_printf ("#kmslatency# %p,%s,%s:%s,%" G_GUINT64_FORMAT ",%" G_GUINT32_FORMAT
+      "\n", entry->thread_ptr, entry_type_str[entry->type].str, element_name,
+      GST_PAD_NAME (entry->pad), entry->ts, entry->num_buffers);
 }
 
 static void
@@ -191,18 +191,18 @@ kms_latency_tracer_finalize (GObject * object)
   GST_DEBUG_OBJECT (self, "finalize");
 
   if (self->priv->entry_limit_reached) {
-    GST_WARNING_OBJECT (self, "Entry number (%d) limit was reached",
+    g_printf ("KmsLatency: Entry number (%d) limit was reached\n",
         MAX_ENTRIES_NUM);
   }
 
-  GST_INFO_OBJECT (self, "Logging out profiling data...");
+  g_printf ("KmsLatency: Logging out profiling data...\n");
   for (i = 0; i < self->priv->idx; i++) {
     KmsLatencyEntry entry = self->priv->entries[i];
     kms_latency_tracer_log_entry (self, &entry);
     g_clear_object (&entry.element);
     g_clear_object (&entry.pad);
   }
-  GST_INFO_OBJECT (self, "Logging out OK.");
+  g_printf ("KmsLatency: Logging out OK\n");
 
   g_slice_free1 (MAX_ENTRIES_SIZE, self->priv->entries);
 
@@ -246,7 +246,7 @@ kms_latency_tracer_init (KmsLatencyTracer * self)
 {
   GstTracer *tracer = GST_TRACER (self);
 
-  GST_INFO_OBJECT (self, "Init...");
+  g_printf ("KmsLatency: Init...");
 
   self->priv = KMS_LATENCY_TRACER_GET_PRIVATE (self);
   self->priv->entries = g_slice_alloc0 (MAX_ENTRIES_SIZE);
@@ -260,5 +260,5 @@ kms_latency_tracer_init (KmsLatencyTracer * self)
   gst_tracing_register_hook (tracer, "pad-push-list-post",
       G_CALLBACK (do_push_buffer_list_post));
 
-  GST_INFO_OBJECT (self, "Init OK.");
+  g_printf ("KmsLatency: Init OK.");
 }
